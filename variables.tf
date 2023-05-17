@@ -1,4 +1,4 @@
-#parameters that coustermer needs to enter
+#options tha coustmer needs to enter
 
 variable "prefix" {
   description = "A unique identifier for resources. Must begin with a lowercase letter and end with a lowerccase letter or number. This prefix will be prepended to any resources provisioned by this template. Prefixes must be 16 or fewer characters."
@@ -21,6 +21,12 @@ variable "ibmcloud_api_key" {
 
 variable "region" {
   description = "Region where VPC will be created. To find your VPC region, use `ibmcloud is regions` command to find available regions."
+  type        = string
+  default     = ""
+}
+
+variable "zone" {
+  description = "zone where VPC will be created. ex:jp-tok-1,us-south-1"
   type        = string
   default     = ""
 }
@@ -61,25 +67,7 @@ variable "linux_ssh_publickey" {
   description = "linux_ssh_publickey"
 }
 
-variable "vtl_index_volume_size" {
-  type        = number
-  default     = 20
-  description = "block-storage-volume maximum size of the volume in 2000GB, it will fail if we exceed the size"
-}
-
-variable "vtl_tape_volume_size" {
-  type        = number
-  default     = 20
-  description = "tape-storage-volume maximum size of the volume in 2000GB, it will fail if we exceed the size"
-}
-
-variable "vtl_configuration_volume_size" {
-  type        = number
-  default     =20
-  description = "configuration-storage-volume maximum size of the volume in 2000GB, it will fail if we exceed the size"
-}
-
-#optional variables- /Defaul variables
+#optional / default values
 
 variable "powervs_resource_group_name" {
   description = "Existing IBM Cloud resource group name."
@@ -99,7 +87,6 @@ variable "powervs_management_network" {
     cidr = "10.51.0.0/24"
   }
 }
-
 
 variable "powervs_backup_network" {
   description = "Name of the IBM Cloud PowerVS backup network and CIDR to create."
@@ -127,6 +114,27 @@ variable "cloud_connection" {
     metered        = true
   }
 }
+
+variable "vtl_index_volume_size" {
+  type        = number
+  default     = 20
+  description = "block-storage-volume maximum size of the volume in 2000GB, it will fail if we exceed the size"
+}
+
+variable "vtl_tape_volume_size" {
+  type        = number
+  default     = 20
+  description = "tape-storage-volume maximum size of the volume in 2000GB, it will fail if we exceed the size"
+}
+
+variable "vtl_configuration_volume_size" {
+  type        = number
+  default     =20
+  description = "configuration-storage-volume maximum size of the volume in 2000GB, it will fail if we exceed the size"
+}
+
+
+
 
 variable "vtl_memory" {
   type        = number
@@ -193,23 +201,41 @@ variable "vtl_affinity_policy" {
   default     =  "anti-affinity"
   description = "Storage anti-affinity policy to use for placemant of the VTL volume if PVM instance IDs are sepcified"
 }
-
-
-variable "powervs_image_names" {
-  description = "List of Images to be imported into cloud account from catalog images."
-  type        = list(string)
-  default = [ "RHEL8-SP6","7200-05-05","IBMi-72-09-2924-8" ]
+variable "pvm_instances" {
+  type        = string
+  default     = ""
+  description = "The comma-separated list of PVM instance IDs for the storage anti-affinity policy, as defined for the selected Power Systems Virtual Server CRN"
 }
+
+variable "powervs_image_name1" {
+  description = "List of Images to be imported into cloud account from catalog images."
+  type        = string
+  default = "RHEL8-SP6"
+}
+
+variable "powervs_image_name2" {
+  description = "List of Images to be imported into cloud account from catalog images."
+  type        = string
+  default = "7200-05-05"
+}
+
+variable "powervs_image_name3" {
+  description = "List of Images to be imported into cloud account from catalog images."
+  type        = string
+  default = "IBMi-72-09-2924-8"
+}
+
+
 
 variable "IBMI_memory" {
   type        = number
-  default     = "2"
+  default     = 18
   description = "IBMI_memory"
 }
 
 variable "IBMI_processors" {
   type        = number
-  default     = "0.25"
+  default     = 2
   description = "IBMI_processors"
 }
 
@@ -242,13 +268,13 @@ variable "IBMI_storage_type" {
 
 variable "AIX_memory" {
   type        = number
-  default     = "2"
+  default     = 18
   description = "AIX_memory"
 }
 
 variable "AIX_processors" {
   type        = number
-  default     = "0.25"
+  default     = 2
   description = "AIX_processors"
 }
 
@@ -278,13 +304,13 @@ variable "AIX_storage_type" {
 
 variable "linux_memory" {
   type        = number
-  default     = "2"
+  default     = 18
   description = "linux_memory"
 }
 
 variable "linux_processors" {
   type        = number
-  default     = "0.25"
+  default     = 2
   description = "linux_processors"
 }
 

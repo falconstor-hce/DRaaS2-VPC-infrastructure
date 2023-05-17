@@ -1,6 +1,8 @@
 #COS and bucket creation
+
 resource "ibm_resource_instance" "cos_instance" {
   name              = "${var.prefix}-cos-instance"
+  #resource_group_id = data.ibm_resource_group.group.id
   service           = "cloud-object-storage"
   plan              = "standard"
   location          = "global"
@@ -68,23 +70,23 @@ resource "ibm_is_vpc_address_prefix" "example" {
   cidr = "10.0.1.0/24"
   name = "add-prefix"
   vpc  = ibm_is_vpc.example.id
-  zone = "jp-tok-1"
+  zone = var.zone
 }
 
 resource "ibm_is_subnet" "example" {
   depends_on = [
     ibm_is_vpc_address_prefix.example
   ]
-  name            = "windows-subnet"
+  name            = "${var.prefix}-windows-subnet"
   vpc             = ibm_is_vpc.example.id
-  zone            = "jp-tok-1"
+  zone            = var.zone
   ipv4_cidr_block = "10.0.1.0/24"
 }
 
-#Windows server creation in VPC infrastrucrure
+#windows server in VPC infrastructure
 
 resource "ibm_is_ssh_key" "example" {
-  name       = "windows-ssh"
+  name       = "${var.prefix}-windows-ssh"
   public_key = var.windows_ssh_publickey
 }
 
@@ -105,7 +107,7 @@ resource "ibm_is_instance" "example" {
   }
 
   vpc  = ibm_is_vpc.example.id
-  zone = "jp-tok-1"
+  zone = var.zone
   keys = [ibm_is_ssh_key.example.id]
 
   //User can configure timeouts
@@ -116,13 +118,15 @@ resource "ibm_is_instance" "example" {
   }
 }
 
-#Transit gateway creation and connection to vpc
+#transit gateway creation
 
 resource "ibm_tg_gateway" "new_tg_gw"{
 name="${var.prefix}-transit-gateway"
 location= var.region
 global=true
 } 
+
+#transit gateway connection to vpc
 
 resource "ibm_tg_connection" "test_ibm_tg_connection" {
   gateway      = ibm_tg_gateway.new_tg_gw.id
@@ -131,7 +135,7 @@ resource "ibm_tg_connection" "test_ibm_tg_connection" {
   network_id   = ibm_is_vpc.example.crn
 }
 
-#Power infrastructure
+#power infrastructure 
 
 locals {
   service_type = "power-iaas"
@@ -148,14 +152,17 @@ locals {
   placement_group = [for x in data.ibm_pi_placement_groups.cloud_instance_groups.placement_groups : x if x.name == var.vtl_placement_group]
   placement_group_id = length(local.placement_group) > 0 ? local.placement_group[0].id : ""
 
-  images_length              = length(var.powervs_image_names)
-  split_images_index         = ceil(local.images_length / 3)
-  catalog_images_to_import_1 = flatten([for stock_image in data.ibm_pi_catalog_images.catalog_images_ds.images : [for image_name in slice(var.powervs_image_names, 0, local.split_images_index) : stock_image if stock_image.name == image_name]])
-  catalog_images_to_import_2 = flatten([for stock_image in data.ibm_pi_catalog_images.catalog_images_ds.images : [for image_name in slice(var.powervs_image_names, 1, local.split_images_index) : stock_image if stock_image.name == image_name]])
-  catalog_images_to_import_3 = flatten([for stock_image in data.ibm_pi_catalog_images.catalog_images_ds.images : [for image_name in slice(var.powervs_image_names, local.split_images_index, local.images_length) : stock_image if stock_image.name == image_name]])
-  split_images_1             = slice(var.powervs_image_names, 0, local.split_images_index)
-  split_images_2             = slice(var.powervs_image_names, 1, local.split_images_index)
-  split_images_3             = slice(var.powervs_image_names, local.split_images_index, local.images_length)
+  catalog_images_to_import_1 = [for stock_image in data.ibm_pi_catalog_images.catalog_images_ds.images : stock_image if stock_image.name == var.powervs_image_name1]
+  public_image1 = [for x in data.ibm_pi_images.cloud_instance_images.image_info : x if x.name == var.powervs_image_name1]
+  public_image1_id = length(local.public_image1) > 0 ? local.public_image1[0].id  : ""  
+  
+  catalog_images_to_import_2 = [for stock_image in data.ibm_pi_catalog_images.catalog_images_ds.images : stock_image if stock_image.name == var.powervs_image_name2]
+  public_image2 = [for x in data.ibm_pi_images.cloud_instance_images.image_info : x if x.name == var.powervs_image_name2]
+  public_image2_id = length(local.public_image2) > 0 ? local.public_image2[0].id  : ""
+  
+  catalog_images_to_import_3 = [for stock_image in data.ibm_pi_catalog_images.catalog_images_ds.images : stock_image if stock_image.name == var.powervs_image_name3]
+  public_image3 = [for x in data.ibm_pi_images.cloud_instance_images.image_info : x if x.name == var.powervs_image_name3]
+  public_image3_id = length(local.public_image3 ) > 0 ? local.public_image3[0].id  : ""
 }
 
 #power workspace creation
@@ -216,7 +223,7 @@ data "ibm_pi_network" "backup_network" {
   pi_cloud_instance_id = local.pid
 }
 
-#Cloud Connection creation
+#cloud connection creation
 
 resource "ibm_pi_cloud_connection" "cloud_connection" {
   provider =  ibm.tile
@@ -228,9 +235,7 @@ resource "ibm_pi_cloud_connection" "cloud_connection" {
   pi_cloud_connection_transit_enabled = true
   pi_cloud_connection_networks = [data.ibm_pi_network.management_network.id,data.ibm_pi_network.backup_network.id]
 }
-
-#Transit gateway connection to created Cloud Connection
-
+#cloud connection connection to created transit gateway
 data "ibm_tg_gateway" "tg_gateway_ds" {
   name = ibm_tg_gateway.new_tg_gw.name
 }
@@ -238,7 +243,6 @@ data "ibm_tg_gateway" "tg_gateway_ds" {
 
 data "ibm_dl_gateway" "gateway_ds_1" {
   depends_on = [ibm_pi_cloud_connection.cloud_connection]
-  #count      = var.cloud_connection_count > 0 ? 1 : 0
   name       = ibm_pi_cloud_connection.cloud_connection.pi_cloud_connection_name
 }
 
@@ -258,7 +262,7 @@ resource "ibm_tg_connection" "ibm_tg_connection_1" {
   network_id   = time_sleep.dl_1_resource_propagation.triggers["dl_crn"]
 }
 
-#VTL instance creation
+#VTL server creation
 
 data "ibm_pi_catalog_images" "catalog_images" {
   provider             = ibm.tile
@@ -285,8 +289,8 @@ resource "ibm_pi_key" "sshkeys" {
 }
 
 resource "ibm_pi_image" "stock_image_copy" {
-  provider             = ibm.tile
   count = length(local.private_image_id) == 0 ? 1 : 0
+  provider             = ibm.tile
   pi_image_name       = local.stock_image_name
   pi_image_id         = local.catalog_image[0].image_id
   pi_cloud_instance_id = local.pid
@@ -307,8 +311,9 @@ data "ibm_pi_network" "public_network" {
   pi_cloud_instance_id = local.pid
   pi_network_name      = ibm_pi_network.public_network[0].pi_network_name
 }
-
+/*
 resource "ibm_pi_instance" "instance" {
+  depends_on = [ ibm_pi_image.stock_image_copy ]
   provider             = ibm.tile
   pi_cloud_instance_id = local.pid
   pi_memory            = var.vtl_memory
@@ -320,7 +325,10 @@ resource "ibm_pi_instance" "instance" {
   pi_sys_type          = var.vtl_sys_type
   pi_storage_type      = var.vtl_storage_type
   pi_health_status    = "WARNING"
-  pi_storage_pool     = "Tier1-Flash-2"
+  pi_placement_group_id = local.placement_group_id
+  pi_license_repository_capacity = var.vtl_licensed_repository_capacity
+  pi_affinity_policy   = length(var.pvm_instances) > 0 ? var.vtl_affinity_policy : null
+  pi_anti_affinity_instances = length(var.pvm_instances) > 0 ? split(",", var.pvm_instances) : null
   pi_volume_ids  = [data.ibm_pi_volume.index_volume.id,data.ibm_pi_volume.tape_volume.id,data.ibm_pi_volume.configuration_volume.id]
   dynamic "pi_network" {
     for_each = var.vtl_public_network_name == "" ? [] : [1]
@@ -337,9 +345,17 @@ resource "ibm_pi_instance" "instance" {
       network_id = data.ibm_pi_network.backup_network.id
     }
   }
-}
+timeouts {
+    create = "2h"
+    update = "1h"
+    delete = "1h"
+  }
+
+
+}*/
 
 resource "ibm_pi_volume" "index_volume"{
+  provider             = ibm.tile
   pi_volume_size       = var.vtl_index_volume_size
   pi_volume_name       = "${var.prefix}-index-volume"
   pi_volume_type       = var.vtl_storage_type
@@ -348,11 +364,13 @@ resource "ibm_pi_volume" "index_volume"{
 }
 
 data "ibm_pi_volume" "index_volume" {
+  provider             = ibm.tile
   pi_volume_name       = ibm_pi_volume.index_volume.pi_volume_name
   pi_cloud_instance_id = local.pid
 }
 
 resource "ibm_pi_volume" "tape_volume"{
+  provider             = ibm.tile
   pi_volume_size       = var.vtl_tape_volume_size
   pi_volume_name       = "${var.prefix}-tape-volume"
   pi_volume_type       = var.vtl_storage_type
@@ -361,11 +379,13 @@ resource "ibm_pi_volume" "tape_volume"{
 }
 
 data "ibm_pi_volume" "tape_volume" {
+  provider             = ibm.tile
   pi_volume_name       = ibm_pi_volume.tape_volume.pi_volume_name
   pi_cloud_instance_id = local.pid
 }
 
 resource "ibm_pi_volume" "configuration_volume"{
+  provider             = ibm.tile
   pi_volume_size       = var.vtl_configuration_volume_size
   pi_volume_name       = "${var.prefix}-configuration-volume"
   pi_volume_type       = var.vtl_storage_type
@@ -374,12 +394,13 @@ resource "ibm_pi_volume" "configuration_volume"{
 }
 
 data "ibm_pi_volume" "configuration_volume" {
+  provider             = ibm.tile
   pi_volume_name       = ibm_pi_volume.configuration_volume.pi_volume_name
   pi_cloud_instance_id = local.pid
 }
 
 
-#IBMI and AIX and Linux server creation
+#IBMI,AIX and Linux server creation
 
 
 data "ibm_pi_catalog_images" "catalog_images_ds" {
@@ -390,11 +411,11 @@ data "ibm_pi_catalog_images" "catalog_images_ds" {
 }
 
 resource "ibm_pi_image" "import_images_1" {
+  count = length(local.public_image1_id) == 0 ? 1 : 0
   provider             = ibm.tile
-  count                = length(local.split_images_1)
   pi_cloud_instance_id = local.pid
-  pi_image_id          = local.catalog_images_to_import_1[count.index].image_id
-  pi_image_name        = local.catalog_images_to_import_1[count.index].name
+  pi_image_id          = local.catalog_images_to_import_1[0].image_id
+  pi_image_name        = var.powervs_image_name1
 
   timeouts {
     create = "9m"
@@ -402,12 +423,11 @@ resource "ibm_pi_image" "import_images_1" {
 }
 
 resource "ibm_pi_image" "import_images_2" {
+  count = length(local.public_image2_id) == 0 ? 1 : 0
   provider             = ibm.tile
-  depends_on           = [ibm_pi_image.import_images_1]
-  count                = length(local.split_images_2)
   pi_cloud_instance_id = local.pid
-  pi_image_id          = local.catalog_images_to_import_2[count.index].image_id
-  pi_image_name        = local.catalog_images_to_import_2[count.index].name
+  pi_image_id          = local.catalog_images_to_import_2[0].image_id
+  pi_image_name        = var.powervs_image_name2
 
   timeouts {
     create = "9m"
@@ -415,12 +435,11 @@ resource "ibm_pi_image" "import_images_2" {
 }
 
 resource "ibm_pi_image" "import_images_3" {
+  count = length(local.public_image3_id) == 0 ? 1 : 0
   provider             = ibm.tile
-  depends_on           = [ibm_pi_image.import_images_2]
-  count                = length(local.split_images_3)
   pi_cloud_instance_id = local.pid
-  pi_image_id          = local.catalog_images_to_import_3[count.index].image_id
-  pi_image_name        = local.catalog_images_to_import_3[count.index].name
+  pi_image_id          = local.catalog_images_to_import_3[0].image_id
+  pi_image_name        = var.powervs_image_name3
 
   timeouts {
     create = "9m"
@@ -437,13 +456,13 @@ resource "ibm_pi_key" "linux_sshkey" {
 
 
 resource "ibm_pi_instance" "linux-instance" {
+    depends_on = [ ibm_pi_image.import_images_1 ]
     provider             = ibm.tile
     pi_memory             = var.linux_memory
     pi_processors         = var.linux_processors
     pi_instance_name      = "${var.prefix}-linux-instance"
     pi_proc_type          = var.linux_proc_type
-    count                 = length(local.split_images_1)
-    pi_image_id           = ibm_pi_image.import_images_1[count.index].image_id
+    pi_image_id           = length(local.public_image1_id) == 0 ? ibm_pi_image.import_images_1[0].image_id : local.public_image1_id
     pi_key_pair_name      = ibm_pi_key.linux_sshkey.pi_key_name
     pi_sys_type           = var.linux_sys_type
     pi_cloud_instance_id  = local.pid
@@ -453,6 +472,13 @@ resource "ibm_pi_instance" "linux-instance" {
     pi_network {
       network_id = data.ibm_pi_network.backup_network.id
     }
+    timeouts {
+    create = "2h"
+    update = "1h"
+    delete = "1h"
+  }
+
+
 }
 
 resource "ibm_pi_key" "AIX_sshkey" {
@@ -463,13 +489,13 @@ resource "ibm_pi_key" "AIX_sshkey" {
 }
 
 resource "ibm_pi_instance" "AIX-instance" {
+  depends_on = [ ibm_pi_image.import_images_2 ]
     provider             = ibm.tile
     pi_memory             = var.AIX_memory
     pi_processors         = var.AIX_processors
     pi_instance_name      = "${var.prefix}-AIX-instance"
     pi_proc_type          = var.AIX_proc_type
-    count                 = length(local.split_images_2)
-    pi_image_id           = ibm_pi_image.import_images_2[count.index].image_id
+    pi_image_id           = length(local.public_image2_id) == 0 ? ibm_pi_image.import_images_2[0].image_id : local.public_image2_id
     pi_key_pair_name      = ibm_pi_key.AIX_sshkey.pi_key_name
     pi_sys_type           = var.AIX_sys_type
     pi_cloud_instance_id  = local.pid
@@ -479,6 +505,12 @@ resource "ibm_pi_instance" "AIX-instance" {
     pi_network {
       network_id = data.ibm_pi_network.backup_network.id
     }
+timeouts {
+    create = "2h"
+    update = "1h"
+    delete = "1h"
+  }
+
 }
 
 
@@ -490,13 +522,13 @@ resource "ibm_pi_key" "IBMI_sshkey" {
 }
 
 resource "ibm_pi_instance" "IBMI-instance" {
+  depends_on = [ ibm_pi_image.import_images_3 ]
     provider             = ibm.tile
     pi_memory             = var.IBMI_memory
     pi_processors         = var.IBMI_processors
     pi_instance_name      = "${var.prefix}-IBMI-Instance"
     pi_proc_type          = var.IBMI_proc_type
-    count                 = length(local.split_images_3)
-    pi_image_id           = ibm_pi_image.import_images_3[count.index].image_id
+    pi_image_id           = length(local.public_image3_id) == 0 ? ibm_pi_image.import_images_3[0].image_id : local.public_image3_id
     pi_key_pair_name      = ibm_pi_key.IBMI_sshkey.pi_key_name
     pi_sys_type           = var.IBMI_sys_type
     pi_cloud_instance_id  = local.pid
@@ -506,6 +538,12 @@ resource "ibm_pi_instance" "IBMI-instance" {
     pi_network {
       network_id = data.ibm_pi_network.backup_network.id
     }
+timeouts {
+    create = "2h"
+    update = "1h"
+    delete = "1h"
+  }
+
 }
 
 
