@@ -1,9 +1,7 @@
-#options tha coustmer needs to enter
-
 variable "prefix" {
   description = "A unique identifier for resources. Must begin with a lowercase letter and end with a lowerccase letter or number. This prefix will be prepended to any resources provisioned by this template. Prefixes must be 16 or fewer characters."
   type        = string
-  default     = ""
+  default     = "falcon-draas"
 
   validation {
     error_message = "Prefix must begin with a lowercase letter and contain only lowercase letters, numbers, and - characters. Prefixes must end with a lowercase letter or number and be 16 or fewer characters."
@@ -16,58 +14,58 @@ variable "ibmcloud_api_key" {
   description = "The IBM Cloud platform API key needed to deploy IAM enabled resources."
   type        = string
   sensitive   = true
-  default     = ""
+  default     = "5Frgf9C72JYeD0NlnP2Flo1qJu8v3BvQ2WdeaGDyzI1v"
 }
 
 variable "region" {
   description = "Region where VPC will be created. To find your VPC region, use `ibmcloud is regions` command to find available regions."
   type        = string
-  default     = ""
+  default     = "jp-tok"
 }
 
 variable "zone" {
   description = "zone where VPC will be created. ex:jp-tok-1,us-south-1"
   type        = string
-  default     = ""
+  default     = "jp-tok-1"
 }
 
 variable "powervs_zone" {
   description = "IBM Cloud data center location where IBM PowerVS infrastructure will be created."
   type        = string
-  default     = ""
+  default     = "tok04"
 }
 
 variable "windows_ssh_publickey" {
   type        = string
-  default     = ""
+  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQChrNQNwwYis566zWenxharz+8U4Ipgh/8JCmuSnOShVZlRniXAAdARmamHX/cxn/0N3/85G88Ls5plrzBRVUHya9x07qQZLoeFQC1j1hShrRemo+PGGG1bEZzF3qYzTD3d75aEYQfwr4qk4H+T5kayb2zaHGzmLdGoFPzbeLN//qeYrchbJ+NvjCW8V41wUzc9a86fzabl+RupfKBvGx9gMib8gMl4Tb+2uZcSbXwswYKRztdCKfvTXG2wAuwnPIPXXBUy4FR6yQvlpyWvncJy8+0WRbKdU0oNDu0rYsMw6MaJD5KbjAfn+f4Y681eC+yyuTaTKvBud6YPGCdFLEOF rsa-key-20230517"
   description = "windows_ssh_publickey"
 }
 
 variable "vtl_public_key" {
   type        = string
-  default     = ""
+  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDUTx8/7VhW7yk5o0vGccLJmo4yJ9z2swwG/tj0kdBDsX4TYcMFhV6SBkn1O6yiayM8ycZZQ1eIohtq36Fv1NMlNZ8oyQB9rUzIBzN2iH54cr4Ig/mhqqx1cULuZbwddZSUohgkmHXM9yvORL7SmtSA9a/onGSztB1iIYCaoyvC8FYWYio/uqTnaSuR15sKXwmkcCaGYy5m2P2xnIERrUTjHxlCPLXBborO0vP8BOzc60HswAzL6WBDR7Gzt48gprX78DlX3otufkpksVmHuD2G9C5vbAcbQ840s8FqJNsu/RTcv2yd4Lo7/fpBIEjik6RgftgE2mvRt/IH6T4s4izv rsa-key-20230517"
   description = "VTL public key for SSH key creation"
 }
 
 variable "IBMI_ssh_publickey" {
   type        = string
-  default     = ""
+  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCEOtgEaP7wcK+yZUGv6hXCRntUicg3KVpnkLtNMIACljC4Ib4HoLvRqk18LVplSiYiGfAN0QJpEbj7HJ/rUcaxmngbwaMrD+7+X5B8zn/80dVs8oery15lAG8vxaUugUPqqfylFrMLJsXvLaUvmfaISX9f5PsAZN+2S3WeyhpzZVKf0uV1jiY2czAuGdE/qYbOAKyE2JVd+h+1F/tHZ22aYJvc8pdk2JhESZ4lE0nbqG/eXcblkTcLcpbITVgtPAhR+GafmkKL8nsFdLkj6G8eHqgot9GjPgGs7UWvt4HPFJiveRFASv/HmPYO4305OeiQgIQwbtiiWMXvcvBBHSH5 rsa-key-20230517"
   description = "IBMI_ssh_publickey"
 }
 
 variable "AIX_ssh_publickey" {
   type        = string
-  default     = ""
+  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCNyn5zE3zq2xHy40XbFRyyTxGmt7UOL0pBYBE+SDGFfDOVei0ZBu1nKmGIGQ1uQB5f1lxaQDX6a9rpIzMlbn23Igdua8Y5UXKwIRgUiGgAetRmDZTPXWjGc5KhX3GaftpMrBbooaDSR+APsIREG8oBeKoiX2FKvILdyoRAYoeFQv8tYHxWJ3dW1F/llsROcxMQxL1mqULc0iHzOYrrbl2grDjo10UP9tVcPd9MJE7JkykeXt8MbgTn8WaXRSfO4sD8ND5VZwO2oXV7eYk5bcfUENayZrFbtijIk5ubZOuQbec75+W3klJQ3xnwWxsoVV2asTtugpileVeBKjSFLXdR rsa-key-20230517"
   description = "AIX_ssh_publickey"
 }
 
 variable "linux_ssh_publickey" {
   type        = string
-  default     = ""
+  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/9KxG3ShhWAQ9WgxvqpER83JireG3VuN/ODdrbESf+4F3QdqXJ0LGRmMoaAY5on0Vad9C0iNMR2vrec/pztzg2PGlpVPK9TCYBfo4gn0447OUlV4zl+BGBjn1O63sQ2Dynsm+GSqFcDxFNodbNnG4XnrEa//0701EFbZDufMoYtNAGecnbgW78V3fHWZ6i0ZaMwN/6JW9tN1qGgIdCiMCpS7MPCA6lulpTg9dqhSaJecswT80htbfZPP60n/yLsuHZabruGE0oAA4VtCf/jQh9kjsSKz5eT22pVMfzpAYiZRM74FhD72CSvDW+7PcM8icVcTx/DpC2F+tqbPKOFgd rsa-key-20230517"
   description = "linux_ssh_publickey"
 }
 
-#optional / default values
+
 
 variable "powervs_resource_group_name" {
   description = "Existing IBM Cloud resource group name."
@@ -166,11 +164,7 @@ variable "vtl_storage_type" {
   description = "Type of storage tier to assign to the VTL instance based on required performance: 'tier1' or 'tier3'"
 }
 
-variable "vtl_licensed_repository_capacity" {
-  type        = number
-  default     = 1
-  description = "VTL licensed repository capacity in TB"
-}
+
 
 variable "vtl_public_network_name" {
   type        = string
@@ -191,41 +185,28 @@ variable "vtl_public_gateway" {
 }
 
 
-variable "vtl_placement_group" {
-  type        = string
-  default     = ""
-  description = "Server group name where the VTL instance will be placed, as defined for the selected Power Systems Virtual Server CRN"
-}
-variable "vtl_affinity_policy" {
-  type        = string
-  default     =  "anti-affinity"
-  description = "Storage anti-affinity policy to use for placemant of the VTL volume if PVM instance IDs are sepcified"
-}
-variable "pvm_instances" {
-  type        = string
-  default     = ""
-  description = "The comma-separated list of PVM instance IDs for the storage anti-affinity policy, as defined for the selected Power Systems Virtual Server CRN"
-}
-
-variable "powervs_image_name1" {
+variable "powervs_image_names" {
   description = "List of Images to be imported into cloud account from catalog images."
-  type        = string
-  default = "RHEL8-SP6"
-}
-
-variable "powervs_image_name2" {
-  description = "List of Images to be imported into cloud account from catalog images."
-  type        = string
-  default = "7200-05-05"
-}
-
-variable "powervs_image_name3" {
-  description = "List of Images to be imported into cloud account from catalog images."
-  type        = string
-  default = "IBMi-72-09-2924-8"
+  type        = list(string)
+  default     = ["RHEL8-SP6","7200-05-05","IBMi-72-09-2924-8"]
 }
 
 
+variable "powervs_os_image_name1" {
+  description = "Image Name for PowerVS Instance"
+  type        = string
+  default     = "RHEL8-SP6"
+}
+variable "powervs_os_image_name2" {
+  description = "Image Name for PowerVS Instance"
+  type        = string
+  default     = "7200-05-05"
+}
+variable "powervs_os_image_name3" {
+  description = "Image Name for PowerVS Instance"
+  type        = string
+  default     = "IBMi-72-09-2924-8"
+}
 
 variable "IBMI_memory" {
   type        = number
