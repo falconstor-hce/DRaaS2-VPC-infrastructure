@@ -500,7 +500,7 @@ resource "ibm_pi_instance" "instance" {
 
 }
 
-resource "ibm_pi_volume" "index_volume"{
+resource "ibm_pi_volume" "index_volume" {
   provider             = ibm.tile
   pi_volume_size       = var.vtl_index_volume_size
   pi_volume_name       = "${var.prefix}-index-volume"
