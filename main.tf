@@ -118,6 +118,48 @@ resource "ibm_is_instance" "example" {
   }
 }
 
+#squid server creation
+
+data "ibm_is_image" "squid" {
+  name = "ibm-centos-7-9-minimal-amd64-9"
+}
+
+resource "ibm_is_ssh_key" "squid" {
+  count = length(var.squid_ssh_publickey) > 0 ? 1 : 0
+  name       = "${var.prefix}-squid-ssh"
+  public_key = var.squid_ssh_publickey
+}
+
+resource "ibm_is_instance" "squid" {
+  count = length(var.squid_ssh_publickey) > 0 ? 1 : 0
+  name    = "${var.prefix}-squid"
+  image   = data.ibm_is_image.squid.id
+  profile = "bx2-2x8"
+  metadata_service_enabled  = false
+
+  primary_network_interface {
+    subnet = ibm_is_subnet.example.id
+  }
+
+  network_interfaces {
+    name   = "eth1"
+    subnet = ibm_is_subnet.example.id
+    allow_ip_spoofing = false
+  }
+
+  vpc  = ibm_is_vpc.example.id
+  zone = var.zone
+  keys = [ibm_is_ssh_key.squid[0].id]
+  user_data = "${file("install_squid.sh")}"
+
+  //User can configure timeouts
+  timeouts {
+    create = "15m"
+    update = "15m"
+    delete = "15m"
+  }
+}
+
 #transit gateway creation
 
 resource "ibm_tg_gateway" "new_tg_gw"{
@@ -545,4 +587,27 @@ data "ibm_pi_volume" "configuration_volume" {
   pi_cloud_instance_id = local.pid
 }
 
+#DNS sever  reation with custom resolver
 
+resource "ibm_resource_instance" "test-pdns-cr-instance" {
+        name           =  "${var.prefix}-test-pdns-cr"
+        location       =  "global"
+        service        =  "dns-svcs"
+        plan           =  "standard-dns"
+    }
+    resource "ibm_dns_custom_resolver" "test" {
+        name           =  "test-customresolver"
+        instance_id        =  ibm_resource_instance.test-pdns-cr-instance.guid
+        description    =  "new test CR - TF"
+        high_availability  =  true
+        enabled        =  true
+        locations {
+             subnet_crn  = ibm_is_subnet.example.crn
+             enabled     = true
+        }
+        locations {
+             subnet_crn  = ibm_is_subnet.example.crn
+             enabled     = true
+        }
+        
+    }

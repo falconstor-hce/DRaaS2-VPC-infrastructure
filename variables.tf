@@ -41,6 +41,12 @@ variable "windows_ssh_publickey" {
   description = "windows_ssh_publickey"
 }
 
+variable "squid_ssh_publickey" {
+  type        = string
+  default     = ""
+  description = "squid_ssh_publickey as a optional,If we provide the public for squid it is going to create Squid server,If not it will not create the squid"
+}
+
 variable "vtl_public_key" {
   type        = string
   default     = ""
