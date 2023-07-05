@@ -321,13 +321,13 @@ variable "linux_storage_type" {
 }
 
 variable "peer_cidrs" {
-  description = "List of Images to be imported into cloud account from catalog images."
+  description = "CIDR's of the peer to connect to the gateway, it is required parameter as you provide the mode of VPN gateway"
   type        = list(string)
   default     = [""]
 }
 
 variable "mode" {
-  description = "List of Images to be imported into cloud account from catalog images."
+  description = "If you provide the MODE parameter it is going to create the VPN gateway otherwise it will not create "
   type        = string
   default     = ""
 }
