@@ -611,3 +611,20 @@ resource "ibm_resource_instance" "test-pdns-cr-instance" {
         }
         
     }
+
+resource "ibm_is_vpn_gateway" "example" {
+  count = length(var.mode) > 0 ? 1 : 0
+  name   = "${var.prefix}-vpn-gateway"
+  subnet = ibm_is_subnet.example.id
+  mode   = var.mode
+}
+
+resource "ibm_is_vpn_gateway_connection" "example" {
+  count = length(var.mode) > 0 ? 1 : 0
+  name          = "${var.prefix}-vpn-gateway-connection"
+  vpn_gateway   = ibm_is_vpn_gateway.example[0].id
+  peer_address  = ibm_is_vpn_gateway.example[0].public_ip_address
+  preshared_key = "VPNPassword"
+  local_cidrs   = [ibm_is_subnet.example.ipv4_cidr_block]
+  peer_cidrs    = var.peer_cidrs
+}

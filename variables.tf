@@ -320,6 +320,18 @@ variable "linux_storage_type" {
   description = "Type of storage tier to assign to the VTL instance based on required performance: 'tier1' or 'tier3'"
 }
 
+variable "peer_cidrs" {
+  description = "List of Images to be imported into cloud account from catalog images."
+  type        = list(string)
+  default     = [""]
+}
+
+variable "mode" {
+  description = "List of Images to be imported into cloud account from catalog images."
+  type        = string
+  default     = ""
+}
+
 
 
 
